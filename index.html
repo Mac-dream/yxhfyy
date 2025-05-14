@@ -1,200 +1,189 @@
+<!-- 前台预约系统（mobile-friendly） -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>悠享恢复预约前台系统</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>悠洛克会员预约系统</title>
     <style>
-        :root { font-size: 16px; }
+        :root { --base-font: 16px; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 15px;
-            background: #f5f5f5;
-            line-height: 1.6;
+            font-family: -apple-system, "PingFang SC", sans-serif;
+            margin: 10px;
+            background: #f8f9fa;
         }
         .container {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             padding: 20px;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
-        h2, h3 { color: #2c3e50; margin-bottom: 1.5rem; font-weight: 600; }
-        .form-group { margin-bottom: 1.8rem; }
-        label { display: block; margin-bottom: 0.8rem; color: #666; font-size: 1rem; }
+        h2 { color: #2c3e50; margin-bottom: 1.2rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: #666;
+            font-size: 0.95rem;
+        }
         input, select {
             width: 100%;
-            padding: 14px;
-            border: 2px solid #e0e0e0;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1rem;
             box-sizing: border-box;
-            transition: border-color 0.3s;
         }
-        input:focus, select:focus { border-color: #4CAF50; outline: none; }
+        .member-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .member-switch input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #4CAF50;
+        }
         button {
             background: #4CAF50;
             color: white;
-            padding: 16px 28px;
+            padding: 14px 24px;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1rem;
-            margin: 8px 0;
-            transition: transform 0.2s;
+            font-size: 1.05rem;
+            margin: 10px 0;
             width: 100%;
+            transition: opacity 0.2s;
         }
-        button:active { transform: scale(0.98); }
-        .hidden { display: none; }
+        button:active { opacity: 0.8; }
         #searchResult {
-            padding: 18px;
+            padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
-            margin-top: 1.8rem;
-            font-size: 1rem;
+            margin-top: 1.5rem;
         }
         @media (max-width: 480px) {
-            :root { font-size: 20px; }
-            .container { padding: 15px; margin: 10px; width: calc(100% - 20px); }
-            input, select { padding: 16px; }
-            button { padding: 18px 30px; }
-        }
-        @media (min-width: 768px) {
-            button { width: auto; }
-            .button-group { display: flex; gap: 15px; }
+            :root { --base-font: 14px; }
+            .container { padding: 15px; }
+            button { padding: 12px 20px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>预约登记</h2>
+        <h2>会员预约登记</h2>
         <form id="reservationForm">
             <div class="form-group">
                 <label>姓名：</label>
                 <input type="text" id="name" required>
             </div>
             <div class="form-group">
-                <label>联系方式：</label>
+                <label>联系电话：</label>
                 <input type="tel" id="phone" pattern="[0-9]{11}" required>
             </div>
             <div class="form-group">
                 <label>预约日期：</label>
-                <input type="date" id="date" required min="<?= date('Y-m-d') ?>">
+                <input type="date" id="date" required>
             </div>
             <div class="form-group">
-                <label>预约时间：</label>
+                <label>预约时段：</label>
                 <select id="time" required></select>
             </div>
-            <div class="button-group">
-                <button type="button" onclick="submitReservation()">提交预约</button>
-                <button type="button" onclick="resetForm()">重置表单</button>
+            <div class="member-switch">
+                <input type="checkbox" id="isMember">
+                <label for="isMember">洛克会员</label>
             </div>
+            <button type="button" onclick="submitReservation()">提交预约</button>
+            <button type="button" onclick="resetForm()">重置表单</button>
         </form>
 
-        <h3>预约查询</h3>
-        <div class="form-group">
+        <div class="search-area">
+            <h3>预约查询</h3>
             <input type="text" id="searchInput" placeholder="输入姓名或预约号">
             <button onclick="searchReservation()">立即查询</button>
+            <div id="searchResult"></div>
         </div>
-        <div id="searchResult"></div>
     </div>
 
-    <div id="confirmation" class="hidden container">
-        <h3>✅ 预约成功！</h3>
+    <div id="confirmation" class="container" style="display:none; margin-top:20px;">
+        <h3>✓ 预约成功</h3>
         <p>您的预约号：<strong id="reservationNumber"></strong></p>
-        <p>请妥善保存预约号码</p>
         <button onclick="location.reload()">返回首页</button>
     </div>
 
     <script>
-        // 时间生成逻辑修改点（30分钟间隔）
-        document.getElementById('date').addEventListener('change', updateTimeOptions);
-
-        function updateTimeOptions() {
-            const date = new Date(document.getElementById('date').value);
-            const isWeekend = [0, 6].includes(date.getDay());
+        // 初始化日期选项
+        document.getElementById('date').min = new Date().toISOString().split('T')[0];
+        
+        // 时段生成（30分钟间隔）
+        function generateTimeSlots(isWeekend) {
             const startHour = isWeekend ? 16 : 18;
             const timeSelect = document.getElementById('time');
-            
             timeSelect.innerHTML = '';
-            for (let hour = startHour; hour < 22; hour++) {
-                // 生成30分钟间隔选项
-                [0, 30].forEach(minute => {  // 改为30分钟间隔
-                    const start = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-                    const endMinute = minute + 30;
-                    const endHour = endMinute >= 60 ? hour + 1 : hour;
-                    const end = `${endHour.toString().padStart(2, '0')}:${(endMinute % 60).toString().padStart(2, '0')}`;
+            
+            for(let h = startHour; h < 22; h++){
+                [0, 30].forEach(m => {
+                    const start = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                    const endTime = new Date(0,0,0,h,m+30);
+                    const end = `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}`;
                     
                     const option = document.createElement('option');
                     option.value = start;
-                    option.textContent = `${start} — ${end}`;
+                    option.textContent = `${start} - ${end}`;
                     timeSelect.appendChild(option);
                 });
             }
         }
 
-        function generateReservationNumber() {
-            const today = new Date().toISOString().slice(0,10).replace(/-/g, '');
-            const dailyCount = localStorage.getItem(today) || 0;
-            localStorage.setItem(today, parseInt(dailyCount) + 1);
-            return `${today}${(parseInt(dailyCount) + 1).toString().padStart(3, '0')}`;
-        }
+        document.getElementById('date').addEventListener('change', function() {
+            const isWeekend = [0,6].includes(new Date(this.value).getDay());
+            generateTimeSlots(isWeekend);
+        });
 
+        // 提交预约
         function submitReservation() {
-            const reservations = JSON.parse(localStorage.getItem('reservations')) || [];
             const reservation = {
                 name: document.getElementById('name').value.trim(),
                 phone: document.getElementById('phone').value.trim(),
                 date: document.getElementById('date').value,
                 time: document.getElementById('time').value,
-                number: generateReservationNumber(),
+                isMember: document.getElementById('isMember').checked,
+                number: Date.now().toString().slice(-6),
                 status: '未使用'
             };
 
-            // 原有验证逻辑
-            if (reservations.some(r => r.date === reservation.date && 
-                (r.name === reservation.name || r.phone === reservation.phone))) {
-                alert('每天只能预约一次！');
-                return;
-            }
+            // 存储数据
+            const records = JSON.parse(localStorage.getItem('reservations') || '[]');
+            records.push(reservation);
+            localStorage.setItem('reservations', JSON.stringify(records));
 
-            if (reservations.some(r => r.date === reservation.date && r.time === reservation.time)) {
-                alert('该时间段已被预约！');
-                return;
-            }
-
-            reservations.push(reservation);
-            localStorage.setItem('reservations', JSON.stringify(reservations));
-            
-            document.getElementById('reservationForm').classList.add('hidden');
-            document.getElementById('confirmation').classList.remove('hidden');
+            // 显示确认信息
+            document.getElementById('reservationForm').style.display = 'none';
+            document.getElementById('confirmation').style.display = 'block';
             document.getElementById('reservationNumber').textContent = reservation.number;
         }
 
+        // 查询功能
         function searchReservation() {
-            const input = document.getElementById('searchInput').value.trim();
-            const allReservations = JSON.parse(localStorage.getItem('reservations')) || [];
-            const result = allReservations.find(r => r.name === input || r.number === input);
+            const query = document.getElementById('searchInput').value.trim();
+            const records = JSON.parse(localStorage.getItem('reservations') || '[]');
+            const result = records.find(r => r.name === query || r.number === query);
             
             const resultDiv = document.getElementById('searchResult');
-            if (result) {
-                const startTime = result.time;
-                const [hour, minute] = startTime.split(':').map(Number);
-                const endMinute = minute + 30;
-                const endHour = endMinute >= 60 ? hour + 1 : hour;
-                const formattedEnd = `${endHour.toString().padStart(2, '0')}:${(endMinute % 60).toString().padStart(2, '0')}`;
-                
+            if(result) {
                 resultDiv.innerHTML = `
-                    <div style="color: #4CAF50; margin-bottom: 15px;">✅ 查询到预约记录：</div>
-                    <div><strong>姓名：</strong>${result.name}</div>
-                    <div><strong>预约号：</strong>${result.number}</div>
-                    <div><strong>日期：</strong>${result.date}</div>
-                    <div><strong>时间：</strong>${startTime} — ${formattedEnd}</div>
+                    <div style="color:#4CAF50; margin-bottom:10px;">✓ 找到预约记录</div>
+                    <div>姓名：${result.name}</div>
+                    <div>预约号：${result.number}</div>
+                    <div>日期：${result.date}</div>
+                    <div>时段：${result.time}</div>
+                    <div>会员：${result.isMember ? '是' : '否'}</div>
                 `;
             } else {
-                resultDiv.innerHTML = '<div style="color: #ff4444;">⚠️ 未找到相关预约记录</div>';
+                resultDiv.innerHTML = '<div style="color:#ff4444;">未找到相关记录</div>';
             }
         }
 
@@ -202,9 +191,6 @@
             document.getElementById('reservationForm').reset();
             document.getElementById('searchResult').innerHTML = '';
         }
-
-        // 初始化时间选项
-        updateTimeOptions();
     </script>
 </body>
 </html>
